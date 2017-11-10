@@ -11,6 +11,7 @@
 		FF436BBD1FB5B3320025CDB6 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF436BBC1FB5B3320025CDB6 /* ViewController.swift */; };
 		FF436BBF1FB5B3320025CDB6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FF436BBE1FB5B3320025CDB6 /* Assets.xcassets */; };
 		FF436BC21FB5B3320025CDB6 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FF436BC01FB5B3320025CDB6 /* Main.storyboard */; };
+		FF436BCC1FB5BCA30025CDB6 /* IXRefreshableScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF436BCB1FB5BB100025CDB6 /* IXRefreshableScrollView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -21,6 +22,7 @@
 		FF436BC11FB5B3320025CDB6 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		FF436BC31FB5B3320025CDB6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FF436BC41FB5B3320025CDB6 /* IXRefreshableScrollView.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = IXRefreshableScrollView.entitlements; sourceTree = "<group>"; };
+		FF436BCB1FB5BB100025CDB6 /* IXRefreshableScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IXRefreshableScrollView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -53,6 +55,7 @@
 		FF436BB91FB5B3320025CDB6 /* IXRefreshableScrollView */ = {
 			isa = PBXGroup;
 			children = (
+				FF436BCB1FB5BB100025CDB6 /* IXRefreshableScrollView.swift */,
 				FF436BBA1FB5B3320025CDB6 /* AppDelegate.swift */,
 				FF436BBC1FB5B3320025CDB6 /* ViewController.swift */,
 				FF436BBE1FB5B3320025CDB6 /* Assets.xcassets */,
@@ -96,6 +99,11 @@
 					FF436BB61FB5B3320025CDB6 = {
 						CreatedOnToolsVersion = 9.0;
 						ProvisioningStyle = Automatic;
+						SystemCapabilities = {
+							com.apple.Sandbox = {
+								enabled = 0;
+							};
+						};
 					};
 				};
 			};
@@ -135,6 +143,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FF436BBD1FB5B3320025CDB6 /* ViewController.swift in Sources */,
+				FF436BCC1FB5BCA30025CDB6 /* IXRefreshableScrollView.swift in Sources */,
 				FF436BBB1FB5B3320025CDB6 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -263,10 +272,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = IXRefreshableScrollView/IXRefreshableScrollView.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				INFOPLIST_FILE = IXRefreshableScrollView/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/IXRefreshableScrollView/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = site.ixan.IXRefreshableScrollView;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -278,10 +286,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = IXRefreshableScrollView/IXRefreshableScrollView.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				INFOPLIST_FILE = IXRefreshableScrollView/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/IXRefreshableScrollView/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = site.ixan.IXRefreshableScrollView;
 				PRODUCT_NAME = "$(TARGET_NAME)";
