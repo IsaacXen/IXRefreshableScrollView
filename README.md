@@ -2,6 +2,8 @@
 
 NSScrollView subclass with pull to refresh from top and pull to load from bottom.
 
+NOTE: This project is still under development, which means there are still a lot of bugs to be fixed.
+
 ## Installation
 
 Drag `IXRefrashableScrollView.swift` to your project folder.
