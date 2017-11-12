@@ -153,7 +153,9 @@ extension IXScrollViewRefreshable {
         supplementaryView.indicator.isIndeterminate = false
     }
     
-    func ixScrollView(_ scrollView: IXScrollView, actionForSupplementaryElementOfKind kind: IXScrollView.SupplementaryElementKind) {}
+    func ixScrollView(_ scrollView: IXScrollView, actionForSupplementaryElementOfKind kind: IXScrollView.SupplementaryElementKind) {
+        
+    }
 }
 
 
@@ -161,25 +163,75 @@ extension IXScrollViewRefreshable {
 
 extension IXScrollViewRefreshable where Self: IXScrollView {
     
+    private func scrollToTop() {
+        contentView.animator().setBoundsOrigin(NSMakePoint(0, 0))
+    }
+    
+    private func scrollToBottom() {
+        
+    }
+    
+    private func scrollToCurrentPointIfPossible() {
+        
+    }
+    
     func beginRefreshing() {
         if _isRefreshing { return }
         _isRefreshing = true
 
         // TODO: animate to top
+        oldDocumentHeight = documentHeight
         
         ixScrollView(self, didTriggerSupplementaryElement: supplementalRefreshView!, ofKind: .refresh)
         ixScrollView(self, actionForSupplementaryElementOfKind: .refresh)
+        performAction(for: .refresh)
     }
     
-    func stopRefreshing() {
-        let y = self.documentVisibleRect.origin.y
-
+    func stopRefreshing(scrollToTop shouldScrollToTop: Bool = false) {
+        
+        // TODO: FIX ME!
+        // if set _isRefreshing early, scrolling after animation stop will be normal, but animation will be broken.
+        // if set _isRefreshing in completion, animation will be normal, but scrolling will be broken.
+        // it's all about clipview's document height.
+        // if can find a way to manually update it, this may be fixed.
+        // so the question here is how.
+        
+        if visibleY <= 0 {
+            if !shouldScrollToTop {
+                if oldVisibleY <= 0 {
+                    let reversedY = documentHeight - oldDocumentHeight + visibleY
+                    if abs(oldVisibleY) < abs(reversedY) {
+                        self._isRefreshing = false
+                    }
+                }
+            }
+        }
+        
         NSAnimationContext.runAnimationGroup({ _ in
-            if y < 0 { contentView.animator().setBoundsOrigin(NSMakePoint(0, 0)) }
+            if visibleY <= 0 {
+                if shouldScrollToTop {
+                    scrollToTop()
+                } else {
+                    print(oldVisibleY)
+                    if oldVisibleY <= 0 {
+                        let reversedY = documentHeight - oldDocumentHeight + visibleY
+                        print(reversedY)
+                        
+                        if abs(oldVisibleY) < abs(reversedY) {
+                            let newOrigin = NSMakePoint(0, reversedY)
+                            contentView.setBoundsOrigin(newOrigin)
+                        } else {
+                            contentView.animator().setBoundsOrigin(.zero)
+                        }
+                    }
+                }
+            }
         }) {
             self._isRefreshing = false
+//            self.contentView.animator().setBoundsOrigin(.zero)
             self.ixScrollView(self, didStopSupplementaryElement: self.supplementalRefreshView!, ofKind: .refresh)
         }
+        
     }
     
     func beginLoading() {
@@ -192,7 +244,7 @@ extension IXScrollViewRefreshable where Self: IXScrollView {
         ixScrollView(self, actionForSupplementaryElementOfKind: .load)
     }
     
-    func stopLoading() {
+    func stopLoading(scrollToBottom shouldScrollToBottom: Bool = false) {
         let y = self.documentVisibleRect.origin.y
         let h = self.documentVisibleRect.size.height
         let dh = self.documentView?.frame.size.height ?? h
@@ -203,6 +255,20 @@ extension IXScrollViewRefreshable where Self: IXScrollView {
             self._isLoading = false
             self.ixScrollView(self, didStopSupplementaryElement: self.supplementalLoadingView!, ofKind: .load)
         }
+    }
+    
+    func performAction(for kind: SupplementaryElementKind) {
+        guard let target = target else {
+            print("IXScrollView: can not perform action: target not setted!")
+            return
+        }
+        
+        if kind == .refresh {
+            if let action = refreshAction { _ = target.perform(action) }
+        } else {
+            if let action = loadAction { _ = target.perform(action) }
+        }
+        
     }
 }
 
@@ -296,6 +362,10 @@ class IXScrollView: NSScrollView, IXScrollViewRefreshable {
     /// Perform Haptic Feedback when reach the trigger threshold.
     var triggeredWithHapticFeedback = true
     
+    /// Action
+    var refreshAction: Selector?
+    var loadAction: Selector?
+    var target: AnyObject?
     
     // MARK: - Private Properties
     
@@ -312,6 +382,9 @@ class IXScrollView: NSScrollView, IXScrollViewRefreshable {
     fileprivate var visibleHeight: CGFloat {
         return contentView.frame.size.height
     }
+    
+    fileprivate var oldDocumentHeight: CGFloat = 0
+    fileprivate var oldVisibleY: CGFloat = 0
     
     /// The height of document view.
     fileprivate var documentHeight: CGFloat {
@@ -482,7 +555,9 @@ class IXScrollView: NSScrollView, IXScrollViewRefreshable {
             }
         }
 
+//        print(documentVisibleRect)
         super.scrollWheel(with: event)
+//        print(documentVisibleRect)
     }
     
     
@@ -509,6 +584,10 @@ class IXScrollView: NSScrollView, IXScrollViewRefreshable {
     /// Callback function when the bounds of scroll view's content view changed.
     /// There are 3 things to do here: 1) update the pulling progress. 2) perform Haptic Feedback and 3) call trigger action.
     @objc fileprivate func viewBoundsChanged(_ notification: Notification) {
+        
+        if documentHeight == oldDocumentHeight {
+            oldVisibleY = visibleY
+        }
         
         var progress: CGFloat = 0
         
@@ -640,7 +719,7 @@ class IXClipView: NSClipView {
     /// Update document rect when refreshing or loading to keep supplementary display without hidding.
     override var documentRect: NSRect {
         var rect = super.documentRect
-
+        
         if isRefreshing {
             let height = supplementalRefreshView?.frame.size.height ?? 0
             rect.size.height += height

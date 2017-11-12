@@ -34,16 +34,13 @@ protocol IXScrollViewRefreshable : class {
     /// Stop your custom supplementary view animation here.
     func ixScrollView(_ scrollView: IXScrollView, didStopSupplementaryElement supplementaryView: IXScrollView.SupplementaryView, ofKind kind: IXScrollView.SupplementaryElementKind)
 
-    /// Pulling action to execute when triggered.
-    /// Refresh or load your data here.
-    func ixScrollView(_ scrollView: IXScrollView, actionForSupplementaryElementOfKind kind: IXScrollView.SupplementaryElementKind)
 }
 
 extension IXScrollViewRefreshable where Self : RefreshableScrollView.IXScrollView {  
     func beginRefreshing()
-    func stopRefreshing()
+    func stopRefreshing(scrollToTop: Bool = false)
     func beginLoading()
-    func stopLoading()
+    func stopLoading(scrollToBottom: Bool = false)
 }
 
 class IXScrollView : NSScrollView, IXScrollViewRefreshable {
@@ -85,10 +82,19 @@ class IXScrollView : NSScrollView, IXScrollViewRefreshable {
     /// Perform Haptic Feedback when reach the trigger threshold. `true` by default.
     var triggeredWithHapticFeedback: Bool
 
+    /// Pulling action to execute when triggered.
+    var refreshAction: Selector?
+
+    /// Pulling action to execute when triggered.
+    var loadAction: Selector?
+
+    /// The target to call action
+    var target: AnyObject?
 }
 ```
 
 ## Known Issues
 
-- `SupplementaryTriggerBehavior.instant` doesn't work properly.
+- `SupplementaryTriggerBehavior.instant` doesn't work properly yet.
 - Programmatically call `beginRefreshing()` or `beginLoading` won't scroll to edge.
+- When `stopRefreshing` after a document height changed, scrolling twitch.
