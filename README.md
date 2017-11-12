@@ -91,4 +91,4 @@ class IXScrollView : NSScrollView, IXScrollViewRefreshable {
 ## Known Issues
 
 - `SupplementaryTriggerBehavior.instant` doesn't work properly.
-- Haven't done a test yet.
+- Programmatically call `beginRefreshing()` or `beginLoading` won't scroll to edge.
