@@ -18,8 +18,15 @@ class ViewController: NSViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        scrollView.canPullToLoad = true
+        
+        // setting target & actions
+        
         scrollView.target = self
         scrollView.refreshAction = #selector(refresh)
+        scrollView.loadAction = #selector(load)
+        
+        // setting table view datas for test
         
         for _ in 0..<50 {
            tableDatas.append("testing testing 123")
@@ -28,12 +35,14 @@ class ViewController: NSViewController {
         tableView.reloadData()
     }
 
+    // IBActions
+    
     @IBAction func handleRefresh(_ sender: NSButton) {
         scrollView.beginRefreshing()
     }
     
     @IBAction func handleLoad(_ sender: NSButton) {
-        
+        scrollView.beginLoading()
     }
     
     
@@ -49,7 +58,20 @@ class ViewController: NSViewController {
         
         DispatchQueue.global().async {
             sleep(2)
-         
+            DispatchQueue.main.async {
+                self.tableView.reloadData()
+                self.scrollView.stopRefreshing()
+            }
+        }
+    }
+    
+    @objc func load() {
+        for _ in 0..<5 {
+            tableDatas.append("new Added string")
+        }
+        
+        DispatchQueue.global().async {
+            sleep(2)
             DispatchQueue.main.async {
                 self.tableView.reloadData()
                 self.scrollView.stopRefreshing()
