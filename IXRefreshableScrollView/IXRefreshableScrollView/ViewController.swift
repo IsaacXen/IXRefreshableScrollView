@@ -38,7 +38,7 @@ class ViewController: NSViewController {
     // IBActions
     
     @IBAction func handleRefresh(_ sender: NSButton) {
-        scrollView.beginRefreshing()
+        scrollView.beginRefreshing(scrollToTop: true)
     }
     
     @IBAction func handleLoad(_ sender: NSButton) {
@@ -74,7 +74,7 @@ class ViewController: NSViewController {
             sleep(2)
             DispatchQueue.main.async {
                 self.tableView.reloadData()
-                self.scrollView.stopRefreshing()
+                self.scrollView.stopLoading()
             }
         }
     }

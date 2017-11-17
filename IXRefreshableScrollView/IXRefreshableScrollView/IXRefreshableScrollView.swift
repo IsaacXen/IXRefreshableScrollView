@@ -1,4 +1,6 @@
 //
+// Version 0.0.3
+//
 //  MIT License
 //
 //  Copyright (c) 2017 ix4n33
@@ -45,7 +47,9 @@ protocol IXScrollViewRefreshable: class {
     /// - Returns: The height of supplementary view.
     func ixScrollView(_ scrollView: IXScrollView, heightOfSupplementaryElementOfKind kind: IXScrollView.SupplementaryElementKind) -> CGFloat
     
-    
+    ///
+    /// / Depercated /
+    ///
     /// The height of supplementary view to trigger.
     /// This is use to trigger pulling action when pulling this far.
     /// By default, this return the value of ixScrollView(_: heightOfSupplementaryElementOfKind:) plus 10.
@@ -54,7 +58,7 @@ protocol IXScrollViewRefreshable: class {
     ///   - scrollView: The scroll view that require the supplementary view trigger threshold.
     ///   - kind: A enum indicate the kind of supplementary view.
     /// - Returns: The trigger threshold of supplementary view.
-    func ixScrollView(_ scrollView: IXScrollView, triggeredThresholdOfSupplementaryElementOfKind kind: IXScrollView.SupplementaryElementKind) -> CGFloat
+//    func ixScrollView(_ scrollView: IXScrollView, triggeredThresholdOfSupplementaryElementOfKind kind: IXScrollView.SupplementaryElementKind) -> CGFloat
     
     /// Decided when should scroll view trigger the pulling action.
     ///
@@ -97,10 +101,6 @@ protocol IXScrollViewRefreshable: class {
 
 extension IXScrollViewRefreshable {
     
-//    private func defaultSupplementalElement(of kind: IXScrollView.SupplementaryElementKind, for scrollView: IXScrollView) -> IXScrollView.SupplementaryView {
-//
-//    }
-    
     func ixScrollView(_ scrollView: IXScrollView, viewForSupplementaryElementOfKind kind: IXScrollView.SupplementaryElementKind) -> IXScrollView.SupplementaryView {
         if kind == .refresh {
             if scrollView.supplementalRefreshView == nil {
@@ -123,12 +123,13 @@ extension IXScrollViewRefreshable {
         return 40
     }
     
-    func ixScrollView(_ scrollView: IXScrollView, triggeredThresholdOfSupplementaryElementOfKind kind: IXScrollView.SupplementaryElementKind) -> CGFloat {
-        return ixScrollView(scrollView, heightOfSupplementaryElementOfKind: kind) + 10
-    }
+    // / Depercated /
+//    func ixScrollView(_ scrollView: IXScrollView, triggeredThresholdOfSupplementaryElementOfKind kind: IXScrollView.SupplementaryElementKind) -> CGFloat {
+//        return ixScrollView(scrollView, heightOfSupplementaryElementOfKind: kind) + 10
+//    }
     
     func ixScrollView(_ scrollView: IXScrollView, updateSupplementaryElement supplementaryView: IXScrollView.SupplementaryView, ofKind kind: IXScrollView.SupplementaryElementKind, withProgress progress: CGFloat) {
-        
+//        print("update with progress: \(progress)")
         if !scrollView._isRefreshing || !scrollView._isLoading {
             supplementaryView.indicator.doubleValue = Double(progress * 100)
             supplementaryView.indicator.alphaValue = progress
@@ -157,8 +158,14 @@ extension IXScrollViewRefreshable {
 
 extension IXScrollViewRefreshable where Self: IXScrollView {
     
-    private func scrollToTop() {
-        contentView.animator().setBoundsOrigin(NSMakePoint(0, 0))
+    private func scrollToTop(_ completion: (() -> Void)?) {
+        
+        NSAnimationContext.runAnimationGroup({ context in
+            context.duration = 0.6
+            context.timingFunction = CAMediaTimingFunction(controlPoints: 0.23, 1, 0.32, 1)
+            contentView.animator().setBoundsOrigin(NSMakePoint(0, -supplementalRefreshViewHeight))
+        }, completionHandler: completion)
+
     }
     
     private func scrollToBottom() {
@@ -169,14 +176,21 @@ extension IXScrollViewRefreshable where Self: IXScrollView {
         
     }
     
-    func beginRefreshing() {
+    func beginRefreshing(scrollToTop shouldScrollToTop: Bool = false) {
         if _isRefreshing { return }
         _isRefreshing = true
-
+        
         oldDocumentHeight = documentHeight
         
-        ixScrollView(self, didTriggerSupplementaryElement: supplementalRefreshView!, ofKind: .refresh)
-        performAction(for: .refresh)
+        if shouldScrollToTop {
+            scrollToTop {
+                self.ixScrollView(self, didTriggerSupplementaryElement: self.supplementalRefreshView!, ofKind: .refresh)
+                self.performAction(for: .refresh)
+            }
+        } else {
+            ixScrollView(self, didTriggerSupplementaryElement: supplementalRefreshView!, ofKind: .refresh)
+            performAction(for: .refresh)
+        }
     }
     
     func stopRefreshing(scrollToTop shouldScrollToTop: Bool = false) {
@@ -202,12 +216,10 @@ extension IXScrollViewRefreshable where Self: IXScrollView {
         NSAnimationContext.runAnimationGroup({ _ in
             if visibleY <= 0 {
                 if shouldScrollToTop {
-                    scrollToTop()
+                    scrollToTop(nil)
                 } else {
-                    print(oldVisibleY)
                     if oldVisibleY <= 0 {
                         let reversedY = documentHeight - oldDocumentHeight + visibleY
-                        print(reversedY)
                         
                         if abs(oldVisibleY) < abs(reversedY) {
                             let newOrigin = NSMakePoint(0, reversedY)
@@ -370,8 +382,9 @@ class IXScrollView: NSScrollView, IXScrollViewRefreshable {
     /// Height of refresh view.
     fileprivate var supplementalRefreshViewHeight: CGFloat = 0
     
+    // / Depercated /
     /// Trigger height of refresh view.
-    fileprivate var supplementalRefreshViewTriggeredHeight: CGFloat = 0
+//    fileprivate var supplementalRefreshViewTriggeredHeight: CGFloat = 0
     
     /// This control how scroll view should be trigger when pull from top. See SupplementaryTriggerBehavior for more info about different behavior.
     fileprivate var supplementalRefreshViewTriggerBehavior: SupplementaryTriggerBehavior = .overThreshold
@@ -387,8 +400,9 @@ class IXScrollView: NSScrollView, IXScrollViewRefreshable {
     /// height of loading view.
     fileprivate var supplementalLoadingViewHeight: CGFloat = 0
     
+    // / Depercated /
     /// Trigger height of loading view.
-    fileprivate var supplementalLoadingViewTriggeredHeight: CGFloat = 0
+//    fileprivate var supplementalLoadingViewTriggeredHeight: CGFloat = 0
     
     /// This control how scroll view should be trigger when pull from bottom. See SupplementaryTriggerBehavior for more info about different behavior.
     fileprivate var supplementalLoadingViewTriggerBehavior: SupplementaryTriggerBehavior = .overThreshold
@@ -400,6 +414,35 @@ class IXScrollView: NSScrollView, IXScrollViewRefreshable {
             placeSupplementalElement(supplementalLoadingView, ofKindToContentViewIfNeeded: .load)
         }
     }
+    
+    fileprivate var _progress: CGFloat = 0 {
+        willSet {
+            lastProgress = _progress
+        }
+        
+        didSet {
+            // ask delegate to update
+            if _progress >=  1 { refreshableDelegate.ixScrollView(self, updateSupplementaryElement: supplementalRefreshView!, ofKind: .refresh, withProgress: progress) }
+            if _progress <= -1 { refreshableDelegate.ixScrollView(self, updateSupplementaryElement: supplementalLoadingView!, ofKind: .load, withProgress: -progress) }
+            
+            // perform Haptic Feedback if needed
+            performHapticFeedbackIfNeeded()
+        }
+    }
+    
+    fileprivate var progress: CGFloat {
+        get {
+            return _progress + (_progress > 0 ? -1 : 1)
+        }
+        
+        set {
+            _progress = newValue + (newValue >= 0 ? 1 : -1)
+//            print(lastProgress, newValue)
+        }
+    }
+    
+    /// A Float value storing last progress value.
+    fileprivate var lastProgress: CGFloat = 0
     
     
     // MARK: - Init
@@ -470,20 +513,16 @@ class IXScrollView: NSScrollView, IXScrollViewRefreshable {
             if canPullToRefresh && !_isRefreshing {
                 stopReceivingBoundsChanged = false
                 
-                if supplementalRefreshViewTriggerBehavior == .overThreshold {
-                    if didTriggered && overRefreshView {
-                        beginRefreshing()
-                    }
+                if supplementalRefreshViewTriggerBehavior == .overThreshold && _progress >= 2 {
+                    beginRefreshing()
                 }
             }
             
             if canPullToLoad && !_isLoading {
                 stopReceivingBoundsChanged = false
                 
-                if supplementalLoadingViewTriggerBehavior == .overThreshold {
-                    if didTriggered && overLoadingView {
-                        beginLoading()
-                    }
+                if supplementalLoadingViewTriggerBehavior == .overThreshold && _progress <= -2 {
+                    beginLoading()
                 }
             }
         }
@@ -501,9 +540,6 @@ class IXScrollView: NSScrollView, IXScrollViewRefreshable {
     /// A mutex value to prevent triggered action being call multiple time.
     fileprivate var stopReceivingBoundsChanged: Bool = false
     
-    /// A Float value storing last progress value.
-    fileprivate var lastProgress: CGFloat = 0
-    
     fileprivate var isPullingFromTop: Bool {
         return visibleY <= 0
     }
@@ -520,77 +556,13 @@ class IXScrollView: NSScrollView, IXScrollViewRefreshable {
             oldVisibleY = visibleY
         }
         
-        var progress: CGFloat = 0
-        
         // 1) Update pulling progress and update supplementary view.
-        
-        // if is pulling from top...
-        if canPullToRefresh && isPullingFromTop {
-            
-            // calculate current progress
-            progress = -visibleY / supplementalRefreshViewTriggeredHeight
-            
-            // call delegate to update supplementary view with the calculated progress
-            refreshableDelegate.ixScrollView(self, updateSupplementaryElement: supplementalRefreshView!, ofKind: .refresh, withProgress: progress)
-            
-        // or is pulling from bottom...
-        } else if canPullToLoad && isPullingFromBottom {
-            
-            // calculate current progress
-            progress = (visibleY + visibleHeight - documentHeight) / supplementalLoadingViewTriggeredHeight
-            
-            // call delegate to update supplementary view with the calculated progress
-            refreshableDelegate.ixScrollView(self, updateSupplementaryElement: supplementalLoadingView!, ofKind: .load, withProgress: progress)
-        }
-        
-        // 2) Perform Haptic Feedback if needed.
-        
-        // are we allowed to perform Haptic Feedback?
-        if triggeredWithHapticFeedback {
-            // if yes, then...
-            
-            // are we being refreshing or loading?
-            if !_isRefreshing && !_isLoading {
-                // if not, then...
-                
-                // did it pass the trigger threshold?
-                if (lastProgress >= 1 && progress < 1) || (lastProgress <= 1 && progress > 1) {
-                    // if yes, then...
-                    
-                    // perform Haptic Feedback
-                    NSHapticFeedbackManager.defaultPerformer.perform(.generic, performanceTime: .drawCompleted)
-                }
-            }
-        }
-        
-        // store last progress
-        lastProgress = progress
+        // 2) Perform Haptic Feedback if needed. (see `_progress`'s `didSet`)
+        updatePullingProgressIfNeeded()
         
         // 3) Trigger action if needed.
+        triggerInstantActionIfNeeded()
         
-        // is it already been triggered once?
-        guard !stopReceivingBoundsChanged else { return }
-        
-        // trying to trigger refreshing
-        if visibleY <= -supplementalRefreshViewTriggeredHeight {
-            stopReceivingBoundsChanged = true
-            didTriggered = true
-          
-            // begin action if needed
-            if supplementalRefreshViewTriggerBehavior == .instant {
-                beginRefreshing()
-            }
-            
-        // trying to trigger loading
-        } else if visibleY + visibleHeight >= documentHeight + supplementalLoadingViewTriggeredHeight {
-            stopReceivingBoundsChanged = true
-            didTriggered = true
-            
-            // begin action if needed
-            if supplementalLoadingViewTriggerBehavior == .instant {
-                beginLoading()
-            }
-        }
     }
     
     
@@ -617,12 +589,12 @@ class IXScrollView: NSScrollView, IXScrollViewRefreshable {
     
     /// A bool value indicate whether visible rect reach refresh view's trigger rect.
     fileprivate var overRefreshView: Bool {
-        return visibleY <= -supplementalRefreshViewTriggeredHeight
+        return visibleY <= -supplementalRefreshViewHeight
     }
     
     /// A bool value indicate whether visible rect reach loading view's trigger rect.
     fileprivate var overLoadingView: Bool {
-        return visibleY + visibleHeight >= documentHeight + supplementalLoadingViewTriggeredHeight
+        return visibleY + visibleHeight >= documentHeight + supplementalLoadingViewHeight
     }
     
     /// A bool value indicate whether scroll view is refreshing.
@@ -634,7 +606,7 @@ class IXScrollView: NSScrollView, IXScrollViewRefreshable {
     private func askDelegateForSupplementalRefreshViewIfNeeded() {
         if canPullToRefresh {
             supplementalRefreshViewHeight = refreshableDelegate.ixScrollView(self, heightOfSupplementaryElementOfKind: .refresh)
-            supplementalRefreshViewTriggeredHeight = refreshableDelegate.ixScrollView(self, triggeredThresholdOfSupplementaryElementOfKind: .refresh)
+//            supplementalRefreshViewTriggeredHeight = refreshableDelegate.ixScrollView(self, triggeredThresholdOfSupplementaryElementOfKind: .refresh)
             supplementalRefreshView = refreshableDelegate.ixScrollView(self, viewForSupplementaryElementOfKind: .refresh)
             supplementalRefreshViewTriggerBehavior = refreshableDelegate.ixScrollView(self, triggerBehaviorOfSupplementaryElementOfKind: .refresh)
         }
@@ -643,7 +615,7 @@ class IXScrollView: NSScrollView, IXScrollViewRefreshable {
     private func askDelegateForSupplementalLoadingViewIfNeeded() {
         if canPullToLoad {
             supplementalLoadingViewHeight = refreshableDelegate.ixScrollView(self, heightOfSupplementaryElementOfKind: .load)
-            supplementalLoadingViewTriggeredHeight = refreshableDelegate.ixScrollView(self, triggeredThresholdOfSupplementaryElementOfKind: .load)
+//            supplementalLoadingViewTriggeredHeight = refreshableDelegate.ixScrollView(self, triggeredThresholdOfSupplementaryElementOfKind: .load)
             supplementalLoadingView = refreshableDelegate.ixScrollView(self, viewForSupplementaryElementOfKind: .load)
             supplementalLoadingViewTriggerBehavior = refreshableDelegate.ixScrollView(self, triggerBehaviorOfSupplementaryElementOfKind: .load)
         }
@@ -690,6 +662,58 @@ class IXScrollView: NSScrollView, IXScrollViewRefreshable {
             }
         }
     }
+    
+    private func updatePullingProgressIfNeeded() {
+        // if is pulling from top...
+        if canPullToRefresh && isPullingFromTop {
+            // calculate current progress
+            progress = -visibleY / supplementalRefreshViewHeight
+        // or is pulling from bottom...
+        } else if canPullToLoad && isPullingFromBottom {
+            // calculate current progress
+            progress = (visibleY + visibleHeight - documentHeight) / -supplementalLoadingViewHeight
+        }
+    }
+    
+    private func performHapticFeedbackIfNeeded() {
+        // are we allowed to perform Haptic Feedback?
+        if triggeredWithHapticFeedback {
+            // are we being refreshing or loading?
+            if !_isRefreshing && !_isLoading {
+                // did it pass the trigger threshold?
+                if (abs(lastProgress) >= 2 && abs(progress) < 1) || (abs(lastProgress) < 2 && abs(progress) >= 1) {
+                    // perform Haptic Feedback
+                    NSHapticFeedbackManager.defaultPerformer.perform(.generic, performanceTime: .drawCompleted)
+                }
+            }
+        }
+    }
+    
+    private func triggerInstantActionIfNeeded() {
+        // is it already been triggered once?
+        guard !stopReceivingBoundsChanged else { return }
+        
+        // trying to trigger refreshing
+        if visibleY <= -supplementalRefreshViewHeight {
+            stopReceivingBoundsChanged = true
+            didTriggered = true
+            
+            // begin action if needed
+            if supplementalRefreshViewTriggerBehavior == .instant {
+                beginRefreshing()
+            }
+            
+            // trying to trigger loading
+        } else if visibleY + visibleHeight >= documentHeight + supplementalLoadingViewHeight {
+            stopReceivingBoundsChanged = true
+            didTriggered = true
+            
+            // begin action if needed
+            if supplementalLoadingViewTriggerBehavior == .instant {
+                beginLoading()
+            }
+        }
+    }
 }
 
 
@@ -718,22 +742,10 @@ class IXClipView: NSClipView {
     fileprivate var supplementalRefreshView: NSView? {
         return (superview as? IXScrollView)?.supplementalRefreshView
     }
-    
-//    fileprivate var supplementalRefreshViewTriggeredHeight: CGFloat {
-//        return (superview as? IXScrollView)?.supplementalRefreshViewTriggeredHeight ?? 0
-//    }
-    
+
     var supplementalLoadingView: NSView? {
         return (superview as? IXScrollView)?.supplementalLoadingView
     }
-    
-//    fileprivate var canPullToRefresh: Bool {
-//        return (superview as? IXScrollView)?.canPullToRefresh ?? false
-//    }
-//
-//    fileprivate var canPullToLoad: Bool {
-//        return (superview as? IXScrollView)?.canPullToLoad ?? false
-//    }
 
     fileprivate var isRefreshing: Bool {
         return (superview as? IXScrollView)?._isRefreshing ?? false

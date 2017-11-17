@@ -19,9 +19,6 @@ protocol IXScrollViewRefreshable : class {
     /// The Height of supplementary view.
     func ixScrollView(_ scrollView: IXScrollView, heightOfSupplementaryElementOfKind kind: IXScrollView.SupplementaryElementKind) -> CGFloat
 
-    /// The height of supplementary view to trigger.
-    func ixScrollView(_ scrollView: IXScrollView, triggeredThresholdOfSupplementaryElementOfKind kind: IXScrollView.SupplementaryElementKind) -> CGFloat
-
     /// Decided when should scroll view trigger the pulling action.
     func ixScrollView(_ scrollView: IXScrollView, triggerBehaviorOfSupplementaryElementOfKind kind: IXScrollView.SupplementaryElementKind) -> IXScrollView.SupplementaryTriggerBehavior
 
@@ -39,7 +36,7 @@ protocol IXScrollViewRefreshable : class {
 }
 
 extension IXScrollViewRefreshable where Self : RefreshableScrollView.IXScrollView {  
-    func beginRefreshing()
+    func beginRefreshing(scrollToTop: Bool = false)
     func stopRefreshing(scrollToTop: Bool = false)
     func beginLoading()
     func stopLoading(scrollToBottom: Bool = false)
@@ -100,3 +97,19 @@ class IXScrollView : NSScrollView, IXScrollViewRefreshable {
 - `SupplementaryTriggerBehavior.instant` doesn't work properly yet.
 - Programmatically call `beginRefreshing()` or `beginLoading` won't scroll to edge.
 - When `stopRefreshing` after a document height changed, scrolling twitch.
+
+## Update log
+
+v0.0.3
+
+- remove `triggeredHeight`, use view height instead.
+- calling `beginRefreshing` programmatically now have a option to scroll to top.
+- code cleaning.
+
+v0.0.2
+
+- code cleaning.
+
+v0.0.1
+
+- Hello world!
