@@ -1,5 +1,5 @@
 //
-// Version 0.0.4
+// Version 0.0.5
 //
 //  MIT License
 //
@@ -47,19 +47,6 @@ protocol IXScrollViewRefreshable: class {
     /// - Returns: The height of supplementary view.
     func ixScrollView(_ scrollView: IXScrollView, heightOfSupplementaryElementOfKind kind: IXScrollView.SupplementaryElementKind) -> CGFloat
     
-    ///
-    /// / Depercated /
-    ///
-    /// The height of supplementary view to trigger.
-    /// This is use to trigger pulling action when pulling this far.
-    /// By default, this return the value of ixScrollView(_: heightOfSupplementaryElementOfKind:) plus 10.
-    ///
-    /// - Parameters:
-    ///   - scrollView: The scroll view that require the supplementary view trigger threshold.
-    ///   - kind: A enum indicate the kind of supplementary view.
-    /// - Returns: The trigger threshold of supplementary view.
-//    func ixScrollView(_ scrollView: IXScrollView, triggeredThresholdOfSupplementaryElementOfKind kind: IXScrollView.SupplementaryElementKind) -> CGFloat
-    
     /// Decided when should scroll view trigger the pulling action.
     ///
     /// - Parameters:
@@ -105,14 +92,14 @@ extension IXScrollViewRefreshable {
         if kind == .refresh {
             if scrollView.supplementalRefreshView == nil {
                 let view = IXScrollView.SupplementaryView(withIndicator: true)
-                view.frame = NSMakeRect(0, -scrollView.supplementalRefreshViewHeight, scrollView.frame.width, scrollView.supplementalRefreshViewHeight)
+                view.translatesAutoresizingMaskIntoConstraints = false
                 return view
             }
             return scrollView.supplementalRefreshView!
         } else {
             if scrollView.supplementalLoadingView == nil {
                 let view = IXScrollView.SupplementaryView(withIndicator: true)
-                view.frame = NSMakeRect(0, scrollView.frame.height, scrollView.frame.width, scrollView.supplementalLoadingViewHeight)
+                view.translatesAutoresizingMaskIntoConstraints = false
                 return view
             }
             return scrollView.supplementalLoadingView!
@@ -123,13 +110,7 @@ extension IXScrollViewRefreshable {
         return 40
     }
     
-    // / Depercated /
-//    func ixScrollView(_ scrollView: IXScrollView, triggeredThresholdOfSupplementaryElementOfKind kind: IXScrollView.SupplementaryElementKind) -> CGFloat {
-//        return ixScrollView(scrollView, heightOfSupplementaryElementOfKind: kind) + 10
-//    }
-    
     func ixScrollView(_ scrollView: IXScrollView, updateSupplementaryElement supplementaryView: IXScrollView.SupplementaryView, ofKind kind: IXScrollView.SupplementaryElementKind, withProgress progress: CGFloat) {
-//        print("update with progress: \(progress)")
         if !scrollView._isRefreshing || !scrollView._isLoading {
             supplementaryView.indicator.doubleValue = Double(progress * 100)
             supplementaryView.indicator.alphaValue = progress
@@ -259,17 +240,11 @@ extension IXScrollViewRefreshable where Self: IXScrollView {
     }
     
     private func performAction(for kind: SupplementaryElementKind) {
-        guard let target = target else {
-            print("IXScrollView: can not perform action: target is nil!")
-            return
-        }
-        
         if kind == .refresh {
-            if let action = refreshAction { _ = target.perform(action) }
+            if let action = refreshAction { NSApp.sendAction(action, to: target, from: self) }
         } else {
-            if let action = loadAction { _ = target.perform(action) }
+            if let action = loadAction { NSApp.sendAction(action, to: target, from: self) }
         }
-        
     }
 }
 
@@ -336,11 +311,13 @@ class IXScrollView: NSScrollView, IXScrollViewRefreshable {
         /// Which mean, if you want to create you own supplementary view, you can set it to false.
         func setupSupplementaryView() {
             addSubview(indicator)
-
-            addConstraint(indicator, .centerX, .equal, to: self, .centerX)
-            addConstraint(indicator, .centerY, .equal, to: self, .centerY)
-            addConstraint(indicator, .height, .equal, to: nil, .height, plus: 20)
-            addConstraint(indicator, .width, .equal, to: nil, .width, plus: 20)
+            
+            NSLayoutConstraint.activate([
+                indicator.centerXAnchor.constraint(equalTo: centerXAnchor),
+                indicator.centerYAnchor.constraint(equalTo: centerYAnchor),
+                indicator.heightAnchor.constraint(equalToConstant: 20),
+                indicator.widthAnchor.constraint(equalToConstant: 20)
+            ])
         }
     }
     
@@ -382,10 +359,6 @@ class IXScrollView: NSScrollView, IXScrollViewRefreshable {
     /// Height of refresh view.
     fileprivate var supplementalRefreshViewHeight: CGFloat = 0
     
-    // / Depercated /
-    /// Trigger height of refresh view.
-//    fileprivate var supplementalRefreshViewTriggeredHeight: CGFloat = 0
-    
     /// This control how scroll view should be trigger when pull from top. See SupplementaryTriggerBehavior for more info about different behavior.
     fileprivate var supplementalRefreshViewTriggerBehavior: SupplementaryTriggerBehavior = .overThreshold
     
@@ -399,11 +372,7 @@ class IXScrollView: NSScrollView, IXScrollViewRefreshable {
 
     /// height of loading view.
     fileprivate var supplementalLoadingViewHeight: CGFloat = 0
-    
-    // / Depercated /
-    /// Trigger height of loading view.
-//    fileprivate var supplementalLoadingViewTriggeredHeight: CGFloat = 0
-    
+
     /// This control how scroll view should be trigger when pull from bottom. See SupplementaryTriggerBehavior for more info about different behavior.
     fileprivate var supplementalLoadingViewTriggerBehavior: SupplementaryTriggerBehavior = .overThreshold
     
@@ -437,7 +406,6 @@ class IXScrollView: NSScrollView, IXScrollViewRefreshable {
         
         set {
             _progress = newValue + (newValue >= 0 ? 1 : -1)
-//            print(lastProgress, newValue)
         }
     }
     
@@ -613,7 +581,6 @@ class IXScrollView: NSScrollView, IXScrollViewRefreshable {
     private func askDelegateForSupplementalRefreshViewIfNeeded() {
         if canPullToRefresh {
             supplementalRefreshViewHeight = refreshableDelegate.ixScrollView(self, heightOfSupplementaryElementOfKind: .refresh)
-//            supplementalRefreshViewTriggeredHeight = refreshableDelegate.ixScrollView(self, triggeredThresholdOfSupplementaryElementOfKind: .refresh)
             supplementalRefreshView = refreshableDelegate.ixScrollView(self, viewForSupplementaryElementOfKind: .refresh)
             supplementalRefreshViewTriggerBehavior = refreshableDelegate.ixScrollView(self, triggerBehaviorOfSupplementaryElementOfKind: .refresh)
         }
@@ -622,7 +589,6 @@ class IXScrollView: NSScrollView, IXScrollViewRefreshable {
     private func askDelegateForSupplementalLoadingViewIfNeeded() {
         if canPullToLoad {
             supplementalLoadingViewHeight = refreshableDelegate.ixScrollView(self, heightOfSupplementaryElementOfKind: .load)
-//            supplementalLoadingViewTriggeredHeight = refreshableDelegate.ixScrollView(self, triggeredThresholdOfSupplementaryElementOfKind: .load)
             supplementalLoadingView = refreshableDelegate.ixScrollView(self, viewForSupplementaryElementOfKind: .load)
             supplementalLoadingViewTriggerBehavior = refreshableDelegate.ixScrollView(self, triggerBehaviorOfSupplementaryElementOfKind: .load)
         }
@@ -641,15 +607,19 @@ class IXScrollView: NSScrollView, IXScrollViewRefreshable {
     private func placeSupplementalElement(_ view: SupplementaryView?, ofKindToContentViewIfNeeded kind: SupplementaryElementKind) {
         if let view = view, let documentView = documentView {
             contentView.addSubview(view)
-            contentView.addConstraints(withVisualFormat: "H:|[v0]|", views: view)
             
             let height = kind == .refresh ? supplementalRefreshViewHeight : supplementalLoadingViewHeight
-            view.addConstraint(view, .height, .equal, to: nil, .height, plus: height)
+            
+            NSLayoutConstraint.activate([
+                view.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+                view.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+                view.heightAnchor.constraint(equalToConstant: height)
+            ])
             
             if kind == .refresh {
-                contentView.addConstraint(view, .bottom, .equal, to: documentView, .top)
+                view.bottomAnchor.constraint(equalTo: documentView.topAnchor).isActive = true
             } else {
-                contentView.addConstraint(view, .top, .equal, to: documentView, .bottom)
+                view.topAnchor.constraint(equalTo: documentView.bottomAnchor).isActive = true
             }
         }
     }
@@ -784,29 +754,5 @@ class IXClipView: NSClipView {
     
     override var isFlipped: Bool {
         return true
-    }
-}
-
-// MARK: - Helper Extensions
-
-fileprivate extension NSView {
-    func addConstraint(_ view1: NSView, _ attr1: NSLayoutConstraint.Attribute, _ relation: NSLayoutConstraint.Relation, to view2: NSView?, _ attr2: NSLayoutConstraint.Attribute, plus constant: CGFloat = 0, multiple multiplier: CGFloat = 1) {
-        view1.translatesAutoresizingMaskIntoConstraints = false
-        view2?.translatesAutoresizingMaskIntoConstraints = false
-        
-        addConstraint(NSLayoutConstraint(item: view1, attribute: attr1, relatedBy: relation, toItem: view2, attribute: attr2, multiplier: multiplier, constant: constant))
-    }
-    
-    func addConstraints(withVisualFormat formatString: String, views: NSView...) {
-        var viewDictionary = [String: NSView]()
-        
-        for (index, view) in views.enumerated() {
-            let key = "v\(index)"
-            viewDictionary[key] = view
-            
-            view.translatesAutoresizingMaskIntoConstraints = false
-        }
-        
-        addConstraints(NSLayoutConstraint.constraints(withVisualFormat: formatString, options: NSLayoutConstraint.FormatOptions(), metrics: nil, views: viewDictionary))
     }
 }
