@@ -1,11 +1,3 @@
-    //
-//  ViewController.swift
-//  IXRefreshableScrollView
-//
-//  Created by Isaac Chen on 10/11/2017.
-//  Copyright © 2017 IXAN. All rights reserved.
-//
-
 import Cocoa
 
 class ViewController: NSViewController {

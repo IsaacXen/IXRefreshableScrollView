@@ -1,5 +1,5 @@
 //
-// Version 0.0.3
+// Version 0.0.4
 //
 //  MIT License
 //
@@ -477,6 +477,13 @@ class IXScrollView: NSScrollView, IXScrollViewRefreshable {
     // MARK: - Overrides
     
     
+    override var documentView: NSView? {
+        didSet {
+            askDelegateForSupplementalRefreshViewIfNeeded()
+            askDelegateForSupplementalLoadingViewIfNeeded()
+        }
+    }
+    
     /// Change default clip view to custom one.
     override var contentView: NSClipView {
         get {
@@ -551,7 +558,7 @@ class IXScrollView: NSScrollView, IXScrollViewRefreshable {
     /// Callback function when the bounds of scroll view's content view changed.
     /// 3 things to do here: 1) update the pulling progress 2) perform Haptic Feedback and 3) call trigger action.
     @objc fileprivate func viewBoundsChanged(_ notification: Notification) {
-        
+        Swift.print(#function)
         if documentHeight == oldDocumentHeight {
             oldVisibleY = visibleY
         }
@@ -632,7 +639,7 @@ class IXScrollView: NSScrollView, IXScrollViewRefreshable {
     }
     
     private func placeSupplementalElement(_ view: SupplementaryView?, ofKindToContentViewIfNeeded kind: SupplementaryElementKind) {
-        if let view = view {
+        if let view = view, let documentView = documentView {
             contentView.addSubview(view)
             contentView.addConstraints(withVisualFormat: "H:|[v0]|", views: view)
             
